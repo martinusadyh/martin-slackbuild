@@ -1,7 +1,3 @@
-NSIS (Nullsoft Scriptable Install System) is a professional open source system
-to create Windows installers.  It is designed to be as small and flexible as
-possible and is therefore very suitable for internet distribution. 
-
-NOTE: This won't build on x86_64.
-
-This requires scons.
+gitg is a GitX clone for GNOME/gtk+. It aims at being a small, fast and
+convenient tool to visualize git history and actions that benefit from a
+graphical presentation.
