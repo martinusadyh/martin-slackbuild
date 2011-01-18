@@ -1,0 +1,120 @@
+#!/bin/sh
+# Copyright 2008  Martinus Ady H. <martinus@artivisi.com>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+PKGNAM=alarm-clock    # Packages Name
+VERSION=1.4.3               # Packages Version
+ARCH=${ARCH:-i486}           # Architecture
+BUILD=${BUILD:-2}            # Build Number
+TAG=${TAG:-_mrt}             # Package'ers initial
+CWD=$(pwd)                   # Current Dir
+TMP=${TMP:-/tmp/id-slack}     # For consistency's sake, use this
+PKG=$TMP/package-$PKGNAM    
+PKGLOG=$TMP/package-$PKGNAM-log # Installation log
+OUTPUT=${OUTPUT:-/tmp}         # Drop the package in /tmp
+
+if [ "$ARCH" = "i386" ]; then
+	SLKCFLAGS="-O2 -march=i386 -mtune=i686"
+elif [ "$ARCH" = "i486" ]; then
+	SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "x86_64" ]; then
+	SLKCFLAGS="-O2 -fPIC"
+fi
+
+# Remove old directory from previous build
+rm -rf $TMP/$PKGNAM $PKG $PKGLOG 
+
+# Make new directory
+mkdir -p $TMP $PKG $PKGLOG $OUTPUT
+
+# Remove ekstrak packages in current dir
+rm -rf $PKGNAM-$VERSION
+
+cd $TMP || exit 1
+tar -xvjf $CWD/$PKGNAM-$VERSION.tar.bz2 || exit 1
+cd $PKGNAM-$VERSION || exit 1
+chown -R root:root .
+chmod -R u+w,go+r-w,a-s .
+
+XPREF=`pkg-config --variable=prefix x11` || true
+[ "$XPREF" == "" ] && XPREF='/usr/X11R6'
+
+# Your application will probably need different configure flags;
+# these are provided as an example only. 
+# Be sure to build only shared libraries unless there's some need for
+# static.
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --build=$ARCH-slackware-linux \
+  2>&1 | tee $PKGLOG/configure-$PKGNAM-$VERSION.log     # Log configure process.
+
+# Compile the application and install it into the $PKG directory
+make 2>&1 | tee $PKGLOG/make-$PKGNAM-$VERSION.log       # Log make process.
+make install DESTDIR=$PKG 2>&1 | tee $PKGLOG/make-install-$PKGNAM-$VERSION.log # Log make install process.
+
+# Strip binaries:
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+# Compress man pages if they exist
+if [ -d $PKG/usr/man ] ; then
+    ( cd $PKG/usr/man
+        find . -type f -exec gzip -9 {} \;
+        for i in $(find . -type 1) ; do ln -s $( readlink $i ).gz $i.gz ; rm $i; done
+    ) 
+fi
+
+# Compress info pages and remove the package's dir file
+# If no info pages are installed by the software, don't leave this in the script
+if [ -d $PKG/usr/info ]; then
+	rm -f $PKG/usr/info/dir
+	gzip -9 $PKG/usr/info/*.info*
+fi
+
+# Copying program documentation into package
+mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION
+cp -a README ChangeLog AUTHORS COPYING INSTALL $PKG/usr/doc/$PKGNAM-$VERSION
+cat $CWD/$PKGNAM.SlackBuild > $PKG/usr/doc/$PKGNAM-$VERSION/$PKGNAM.SlackBuild
+cat $CWD/slack-desc > $PKG/usr/doc/$PKGNAM-$VERSION/slack-desc
+
+# Copy the slack-desc (and a custom doinst.sh if necessary) into ./install
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# Make the package; be sure to leave it in $OUTPUT
+# If package symlinks need to be created during install *before*
+# your custom contents of doinst.sh runs, then add the -p switch to
+# the makepkg command below -- see makepkg(8) for details
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PKGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+
+echo "Package log creation at -> " $PKGLOG
+echo "Package result at -> " $OUTPUT/$PKGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+echo "Package creation done."
+echo ""
+echo "Indonesian Slackware Community"
+echo "http://slackware.linux.or.id/"
+echo ""
