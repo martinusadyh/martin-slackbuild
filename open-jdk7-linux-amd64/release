@@ -1,0 +1,5 @@
+JAVA_VERSION="1.7.0"
+OS_NAME="Linux"
+OS_VERSION="2.6"
+OS_ARCH="amd64"
+SOURCE=" .:7203965666a4 corba:b06dd44a2740 hotspot:d9dc0a55c848 jaxp:39bf6dcaab23 jaxws:6bd683f2d527 jdk:5f69702cf570 langtools:8987de9a4ab8  .:7203965666a4 corba:b06dd44a2740 hotspot:d9dc0a55c848 jaxp:39bf6dcaab23 jaxws:6bd683f2d527 jdk:5f69702cf570 langtools:8987de9a4ab8  .:7203965666a4 corba:b06dd44a2740 hotspot:d9dc0a55c848 jaxp:39bf6dcaab23 jaxws:6bd683f2d527 jdk:5f69702cf570 langtools:8987de9a4ab8  .:7203965666a4 corba:b06dd44a2740 hotspot:d9dc0a55c848 jaxp:39bf6dcaab23 jaxws:6bd683f2d527 jdk:5f69702cf570 langtools:8987de9a4ab8"
